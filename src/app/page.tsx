@@ -1,103 +1,127 @@
-import Image from "next/image";
+'use client';
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { db } from "./firebase";
+import { enableNetwork } from 'firebase/firestore';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
+  const [error, setError] = useState<string>('');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now (no don't)
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        // Simple connection test - just enable network
+        await enableNetwork(db);
+        setConnectionStatus('connected');
+        console.log('✅ Firebase connection established');
+      } catch (error: any) {
+        setConnectionStatus('failed');
+        setError(error.message);
+        console.error('❌ Failed to connect to Firebase:', error);
+      }
+    };
+
+    testConnection();
+  }, []);
+
+  const getStatusColor = () => {
+    switch (connectionStatus) {
+      case 'checking': return 'text-yellow-500';
+      case 'connected': return 'text-green-500';
+      case 'failed': return 'text-red-500';
+      default: return 'text-gray-500';
+    }
+  };
+
+  const getStatusIcon = () => {
+    switch (connectionStatus) {
+      case 'checking': return '🔄';
+      case 'connected': return '✅';
+      case 'failed': return '❌';
+      default: return '⚪';
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (connectionStatus) {
+      case 'checking': return 'Testing Firebase connection...';
+      case 'connected': return 'Firebase connection successful!';
+      case 'failed': return `Connection failed: ${error}`;
+      default: return 'Unknown status';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="text-center max-w-md mx-auto p-8">
+        <h1 className="text-4xl font-bold mb-8">Full Court Analytics</h1>
+        
+        {/* Database Connection Status */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Firebase Connection Test</h2>
+          <div className={`text-lg ${getStatusColor()}`}>
+            <span className="text-2xl mr-2">{getStatusIcon()}</span>
+            {getStatusMessage()}
+          </div>
+          {connectionStatus === 'failed' && (
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Retry Connection
+            </button>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Next Steps */}
+        {connectionStatus === 'connected' && (
+          <div className="bg-green-900 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold mb-2 text-green-300">✅ Ready for Next Steps</h3>
+            <p className="text-sm text-green-200">
+              Firebase is connected! You can now set up authentication and security rules.
+            </p>
+          </div>
+        )}
+
+        {/* Firebase Config Check */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Firebase Configuration</h2>
+          <div className="text-sm text-left space-y-2">
+            <div>
+              <span className="text-gray-400">API Key:</span> 
+              <span className={process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'text-green-500' : 'text-red-500'}>
+                {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? ' ✅ Set' : ' ❌ Missing'}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-400">Project ID:</span> 
+              <span className={process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? 'text-green-500' : 'text-red-500'}>
+                {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? ' ✅ Set' : ' ❌ Missing'}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-400">Auth Domain:</span> 
+              <span className={process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? 'text-green-500' : 'text-red-500'}>
+                {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? ' ✅ Set' : ' ❌ Missing'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="space-y-4">
+          <div className="space-x-4">
+            <Link href="/sign-in" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              Sign In
+            </Link>
+            <Link href="/sign-up" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
